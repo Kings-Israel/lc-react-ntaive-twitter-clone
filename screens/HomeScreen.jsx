@@ -143,6 +143,9 @@ const styles = StyleSheet.create({
     flex: 1, 
     backgroundColor: 'white'
   },
+  textGray: {
+    color: 'gray'
+  },  
   flexRow: {
     flexDirection: 'row'
   },
