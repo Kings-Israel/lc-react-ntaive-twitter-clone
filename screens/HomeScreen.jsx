@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Image,
   Platform,
+  ActivityIndicator
 } from "react-native";
 import { EvilIcons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
@@ -17,61 +18,31 @@ import locale from 'date-fns/locale/en-US'
 
 export default function HomeScreen({ navigation }) {
   const [tweets, setTweets] = useState([]);
-  const DATA = [
-    {
-      id: "1",
-      title: "First Item",
-    },
-    {
-      id: "2",
-      title: "Second Item",
-    },
-    {
-      id: "3",
-      title: "Third Item",
-    },
-    {
-      id: "4",
-      title: "Fourth Item",
-    },
-    {
-      id: "5",
-      title: "Fifth Item",
-    },
-    {
-      id: "6",
-      title: "Sixth Item",
-    },
-    {
-      id: "7",
-      title: "Seventh Item",
-    },
-    {
-      id: "8",
-      title: "Eigth Item",
-    },
-    {
-      id: "9",
-      title: "Ninth Item",
-    },
-    {
-      id: "10",
-      title: "Tenth Item",
-    },
-  ];
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     getAllTweets();
   }, []);
 
+  function handleRefresh() {
+    setIsRefreshing(true)
+    getAllTweets()
+  }
+
   function getAllTweets() {
     axios
-      .get("http://10.0.2.2:8000/api/tweets")
+      // .get("http://10.0.2.2:8000/api/tweets")
+      .get('https://0e1b-154-159-252-74.in.ngrok.io/api/tweets')
       .then((response) => {
         setTweets(response.data);
+        setIsLoading(false)
+        setIsRefreshing(false)
       })
       .catch((error) => {
         console.log(error);
+        setIsLoading(false)
+        setIsRefreshing(false)
       });
   }
 
@@ -161,14 +132,20 @@ export default function HomeScreen({ navigation }) {
   );
   return (
     <View style={styles.container}>
+      {isLoading ? (
+      <ActivityIndicator style={{ marginTop: 8 }} color='gray' size="large" />
+      ) : (
       <FlatList
         data={tweets}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         ItemSeparatorComponent={() => (
           <View style={styles.tweetSeparator}></View>
         )}
+        refreshing={isRefreshing}
+        onRefresh={handleRefresh}
       />
+      )}
       <TouchableOpacity
         style={styles.floatingButton}
         onPress={() => goToNewTweet()}
