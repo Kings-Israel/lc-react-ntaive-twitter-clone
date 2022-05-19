@@ -8,42 +8,58 @@ import {
   TouchableOpacity,
   Image,
   Platform,
-  ActivityIndicator
+  ActivityIndicator,
 } from "react-native";
 import { EvilIcons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import { formatDistanceToNowStrict } from "date-fns";
 import formatDistance from "../helpers/formatDateDistance";
-import locale from 'date-fns/locale/en-US'
+import locale from "date-fns/locale/en-US";
 
 export default function HomeScreen({ navigation }) {
   const [tweets, setTweets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [isAtEndOfScrolling, setIsAtEndOfScrolling] = useState(false);
 
   useEffect(() => {
     getAllTweets();
-  }, []);
-
-  function handleRefresh() {
-    setIsRefreshing(true)
-    getAllTweets()
-  }
+  }, [page]);
 
   function getAllTweets() {
     axios
-      // .get("http://10.0.2.2:8000/api/tweets")
-      .get('https://0e1b-154-159-252-74.in.ngrok.io/api/tweets')
-      .then((response) => {
-        setTweets(response.data);
-        setIsLoading(false)
-        setIsRefreshing(false)
+      .get(`http://10.0.2.2:8000/api/tweets?page=${page}`)
+      // .get(`https://4639-41-212-47-54.eu.ngrok.io/api/tweets?page=${page}`)
+      .then(response => {
+        if (page === 1) {
+          setTweets(response.data.data);
+        } else {
+          setTweets([...tweets, ...response.data.data]);
+        }
+
+        if (!response.data.next_page_url) {
+          setIsAtEndOfScrolling(true);
+        }
+        
+        setIsLoading(false);
+        setIsRefreshing(false);
       })
       .catch((error) => {
-        console.log(error);
-        setIsLoading(false)
-        setIsRefreshing(false)
+        setIsLoading(false);
+        setIsRefreshing(false);
       });
+  }
+
+  function handleRefresh() {
+    setPage(1)
+    setIsAtEndOfScrolling(false)
+    setIsRefreshing(true);
+    getAllTweets();
+  }
+
+  function handleEnd() {
+    setPage(page + 1);
   }
 
   function goToProfile() {
@@ -133,18 +149,25 @@ export default function HomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
       {isLoading ? (
-      <ActivityIndicator style={{ marginTop: 8 }} color='gray' size="large" />
+        <ActivityIndicator style={{ marginTop: 8 }} color="gray" size="large" />
       ) : (
-      <FlatList
-        data={tweets}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        ItemSeparatorComponent={() => (
-          <View style={styles.tweetSeparator}></View>
-        )}
-        refreshing={isRefreshing}
-        onRefresh={handleRefresh}
-      />
+        <FlatList
+          data={tweets}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          ItemSeparatorComponent={() => (
+            <View style={styles.tweetSeparator}></View>
+          )}
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          onEndReached={handleEnd}
+          onEndReachedThreshold={0}
+          ListFooterComponent={() =>
+            !isAtEndOfScrolling && (
+              <ActivityIndicator size="large" color="gray" />
+            )
+          }
+        />
       )}
       <TouchableOpacity
         style={styles.floatingButton}
