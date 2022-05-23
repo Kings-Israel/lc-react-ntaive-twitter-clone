@@ -15,6 +15,7 @@ import { AntDesign } from "@expo/vector-icons";
 import { formatDistanceToNowStrict } from "date-fns";
 import formatDistance from "../helpers/formatDateDistance";
 import locale from "date-fns/locale/en-US";
+import axiosConfig from '../helpers/axiosConfig'
 
 export default function HomeScreen({ navigation }) {
   const [tweets, setTweets] = useState([]);
@@ -28,9 +29,8 @@ export default function HomeScreen({ navigation }) {
   }, [page]);
 
   function getAllTweets() {
-    axios
-      .get(`http://10.0.2.2:8000/api/tweets?page=${page}`)
-      // .get(`https://4639-41-212-47-54.eu.ngrok.io/api/tweets?page=${page}`)
+    axiosConfig
+      .get(`/tweets?page=${page}`)
       .then(response => {
         if (page === 1) {
           setTweets(response.data.data);
@@ -66,8 +66,10 @@ export default function HomeScreen({ navigation }) {
     navigation.navigate("Profile Screen");
   }
 
-  function goToSingleTweet() {
-    navigation.navigate("Tweet Screen");
+  function goToSingleTweet(tweetId) {
+    navigation.navigate("Tweet Screen", {
+      tweetId: tweetId
+    });
   }
 
   function goToNewTweet() {
@@ -81,7 +83,7 @@ export default function HomeScreen({ navigation }) {
       <View style={{ flex: 1 }}>
         <TouchableOpacity
           style={styles.flexRow}
-          onPress={() => goToSingleTweet()}
+          onPress={() => goToSingleTweet(tweet.id)}
         >
           <Text numberOfLines={1} style={styles.tweetName}>
             {tweet.user.name}
@@ -102,7 +104,7 @@ export default function HomeScreen({ navigation }) {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tweetContentContainer}
-          onPress={() => goToSingleTweet()}
+          onPress={() => goToSingleTweet(tweet.id)}
         >
           <Text style={styles.tweetContent}>{tweet.body}</Text>
         </TouchableOpacity>
