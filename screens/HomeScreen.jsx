@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   FlatList,
@@ -8,7 +7,7 @@ import {
   TouchableOpacity,
   Image,
   Platform,
-  ActivityIndicator,
+  ActivityIndicator
 } from "react-native";
 import { EvilIcons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
@@ -17,16 +16,43 @@ import formatDistance from "../helpers/formatDateDistance";
 import locale from "date-fns/locale/en-US";
 import axiosConfig from '../helpers/axiosConfig'
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({ route, navigation }) {
   const [tweets, setTweets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [isAtEndOfScrolling, setIsAtEndOfScrolling] = useState(false);
+  const flatListRef = useRef()
 
   useEffect(() => {
     getAllTweets();
   }, [page]);
+
+  useEffect(() => {
+    if (route.params?.newTweetAdded) {
+      getAllTweetRefresh();
+      flatListRef.current.scrollToOffset({
+        offset: 0,
+      });
+    }
+  }, [route.params?.newTweetAdded]);
+
+  function getAllTweetRefresh() {
+    setPage(1)
+    setIsAtEndOfScrolling(false)
+    setIsRefreshing(false)
+    axiosConfig
+      .get(`/tweets`)
+      .then(response => {
+        setTweets(response.data.data);
+        setIsLoading(false);
+        setIsRefreshing(false);
+      })
+      .catch((error) => {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      });
+  }
 
   function getAllTweets() {
     axiosConfig
@@ -154,6 +180,7 @@ export default function HomeScreen({ navigation }) {
         <ActivityIndicator style={{ marginTop: 8 }} color="gray" size="large" />
       ) : (
         <FlatList
+          ref={flatListRef}
           data={tweets}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
