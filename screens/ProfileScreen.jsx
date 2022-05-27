@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,16 @@ import {
   TouchableOpacity,
   Image,
   FlatList,
+  Linking,
+  ActivityIndicator
 } from "react-native";
 import { EvilIcons } from "@expo/vector-icons";
-import { Linking } from "react-native-web";
+import { format } from "date-fns";
+import axiosConfig from "../helpers/axiosConfig";
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ route, navigation }) {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const DATA = [
     {
       id: "1",
@@ -54,6 +59,22 @@ export default function ProfileScreen() {
     },
   ];
 
+  useEffect(() => {
+    getUser(route.params.userId);
+  }, []);
+
+  function getUser(user) {
+    axiosConfig
+      .get(`/users/${user}`)
+      .then((response) => {
+        setUser(response.data);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        setIsLoading(false);
+      });
+  }
+
   const renderItem = ({ item }) => (
     <View style={{ marginVertical: 20 }}>
       <Text>{item.title}</Text>
@@ -62,65 +83,67 @@ export default function ProfileScreen() {
 
   const ProfileHeader = () => (
     <View style={styles.container}>
-      <Image
-        style={styles.backGroundImage}
-        source={{
-          uri: "https://images.unsplash.com/photo-1557683316-973673baf926?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufBD8fHx86&auto=format&fit=crop&w=1080&q=80",
-        }}
-      />
-      <View style={styles.avatarContainer}>
-        <Image
-          style={styles.avatar}
-          source={{ uri: "https://reactnative.dev/img/tiny_logo.png" }}
-        />
-        <TouchableOpacity style={styles.followButton}>
-          <Text style={styles.followButtonText}>Follow</Text>
-        </TouchableOpacity>
-      </View>
+      {isLoading ? (
+        <ActivityIndicator style={{ marginTop: 8 }} color="gray" size="large" />
+      ) : (
+        <>
+          <Image
+            style={styles.backGroundImage}
+            source={{
+              uri: "https://images.unsplash.com/photo-1557683316-973673baf926?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufBD8fHx86&auto=format&fit=crop&w=1080&q=80",
+            }}
+          />
+          <View style={styles.avatarContainer}>
+            <Image style={styles.avatar} source={{ uri: user.avatar }} />
+            <TouchableOpacity style={styles.followButton}>
+              <Text style={styles.followButtonText}>Follow</Text>
+            </TouchableOpacity>
+          </View>
 
-      <View style={styles.nameContainer}>
-        <Text style={styles.profileName}>Kings Milimo</Text>
-        <Text style={styles.profileHandle}>@kingsisrael</Text>
-      </View>
+          <View style={styles.nameContainer}>
+            <Text style={styles.profileName}>{user.name}</Text>
+            <Text style={styles.profileHandle}>@{user.username}</Text>
+          </View>
 
-      <View style={styles.profileContainer}>
-        <Text style={styles.profileContainerText}>
-          CEO of CEOs. PhD, MSc, SEO, HTML, CSS, JS, Evangelist Pro Expert Rank
-          Elite Best of the Best
-        </Text>
-      </View>
+          <View style={styles.profileContainer}>
+            <Text style={styles.profileContainerText}>{user.profile}</Text>
+          </View>
 
-      <View style={styles.locationContainer}>
-        <EvilIcons name="location" size={24} color="gray" />
-        <Text style={styles.textGray}>Nairobi, Kenya</Text>
-      </View>
+          <View style={styles.locationContainer}>
+            <EvilIcons name="location" size={24} color="gray" />
+            <Text style={styles.textGray}>{user.location}</Text>
+          </View>
 
-      <View style={styles.linkContainer}>
-        <TouchableOpacity
-          style={styles.linkItem}
-          onPress={() => Linking.openUrl("https://laracasts.com")}
-        >
-          <EvilIcons name="link" size={24} color="gray" />
-          <Text style={styles.linkColor}>laracast.com</Text>
-        </TouchableOpacity>
-        <View style={[styles.linkItem, styles.ml4]}>
-          <EvilIcons name="calendar" size={24} color="gray" />
-          <Text style={styles.textColor}>Joined March 2009</Text>
-        </View>
-      </View>
+          <View style={styles.linkContainer}>
+            <TouchableOpacity
+              style={styles.linkItem}
+              onPress={() => Linking.openURL(user.link)}
+            >
+              <EvilIcons name="link" size={24} color="gray" />
+              <Text style={styles.linkColor}>{user.linkText}</Text>
+            </TouchableOpacity>
+            <View style={[styles.linkItem, styles.ml4]}>
+              <EvilIcons name="calendar" size={24} color="gray" />
+              <Text style={styles.textColor}>
+                Joined {format(new Date(user.created_at), "MMM yyy")}
+              </Text>
+            </View>
+          </View>
 
-      <View style={styles.followContainer}>
-        <View style={styles.followItem}>
-          <Text style={styles.followItemNumber}>509</Text>
-          <Text style={styles.followItemLabel}> Following</Text>
-        </View>
-        <View style={[styles.followItem, styles.ml4]}>
-          <Text style={styles.followItemNumber}>2,3456</Text>
-          <Text style={styles.followItemLabel}> Followers</Text>
-        </View>
-      </View>
+          <View style={styles.followContainer}>
+            <View style={styles.followItem}>
+              <Text style={styles.followItemNumber}>509</Text>
+              <Text style={styles.followItemLabel}> Following</Text>
+            </View>
+            <View style={[styles.followItem, styles.ml4]}>
+              <Text style={styles.followItemNumber}>2,3456</Text>
+              <Text style={styles.followItemLabel}> Followers</Text>
+            </View>
+          </View>
 
-      <View style={styles.separator}></View>
+          <View style={styles.separator}></View>
+        </>
+      )}
     </View>
   );
 
