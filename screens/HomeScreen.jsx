@@ -16,6 +16,8 @@ import formatDistance from "../helpers/formatDateDistance";
 import locale from "date-fns/locale/en-US";
 import axiosConfig from '../helpers/axiosConfig'
 
+import RenderTweet from "../components/RenderTweet";
+
 export default function HomeScreen({ route, navigation }) {
   const [tweets, setTweets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,6 +60,7 @@ export default function HomeScreen({ route, navigation }) {
     axiosConfig
       .get(`/tweets?page=${page}`)
       .then(response => {
+        // console.log(response.data.data)
         if (page === 1) {
           setTweets(response.data.data);
         } else {
@@ -88,94 +91,83 @@ export default function HomeScreen({ route, navigation }) {
     setPage(page + 1);
   }
 
-  function goToProfile(userId) {
-    navigation.navigate("Profile Screen", {
-      userId: userId
-    });
-  }
-
-  function goToSingleTweet(tweetId) {
-    navigation.navigate("Tweet Screen", {
-      tweetId: tweetId
-    });
-  }
-
   function goToNewTweet() {
     navigation.navigate("New Tweet");
   }
-  const renderItem = ({ item: tweet }) => (
-    <View style={styles.tweetContainer}>
-      <TouchableOpacity onPress={() => goToProfile(tweet.user.id)}>
-        <Image style={styles.avatar} source={{ uri: tweet.user.avatar }} />
-      </TouchableOpacity>
-      <View style={{ flex: 1 }}>
-        <TouchableOpacity
-          style={styles.flexRow}
-          onPress={() => goToSingleTweet(tweet.id)}
-        >
-          <Text numberOfLines={1} style={styles.tweetName}>
-            {tweet.user.name}
-          </Text>
-          <Text numberOfLines={1} style={styles.tweetHandle}>
-            @{tweet.user.username}
-          </Text>
-          <Text>&middot;</Text>
-          <Text numberOfLines={1} style={styles.tweetHandle}>
-            {formatDistanceToNowStrict(new Date(tweet.created_at), {
-              addSuffix: true,
-              locale: {
-                ...locale,
-                formatDistance,
-              },
-            })}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.tweetContentContainer}
-          onPress={() => goToSingleTweet(tweet.id)}
-        >
-          <Text style={styles.tweetContent}>{tweet.body}</Text>
-        </TouchableOpacity>
-        <View style={styles.tweetEngagment}>
-          <TouchableOpacity style={[styles.flexRow]}>
-            <EvilIcons
-              name="comment"
-              size={22}
-              color="gray"
-              style={{ marginRight: 2 }}
-            />
-            <Text style={styles.textGray}>456</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
-            <EvilIcons
-              name="retweet"
-              size={22}
-              color="gray"
-              style={{ marginRight: 2 }}
-            />
-            <Text style={styles.textGray}>46</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
-            <EvilIcons
-              name="heart"
-              size={22}
-              color="gray"
-              style={{ marginRight: 2 }}
-            />
-            <Text style={styles.textGray}>1,234</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
-            <EvilIcons
-              name={Platform.OS === "ios" ? "share-apple" : "share-google"}
-              size={22}
-              color="gray"
-              style={{ marginRight: 2 }}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
+  // const renderItem = ({ item: tweet }) => (
+  //   <View style={styles.tweetContainer}>
+  //     <TouchableOpacity onPress={() => goToProfile(tweet.user.id)}>
+  //       <Image style={styles.avatar} source={{ uri: tweet.user.avatar }} />
+  //     </TouchableOpacity>
+  //     <View style={{ flex: 1 }}>
+  //       <TouchableOpacity
+  //         style={styles.flexRow}
+  //         onPress={() => goToSingleTweet(tweet.id)}
+  //       >
+  //         <Text numberOfLines={1} style={styles.tweetName}>
+  //           {tweet.user.name}
+  //         </Text>
+  //         <Text numberOfLines={1} style={styles.tweetHandle}>
+  //           @{tweet.user.username}
+  //         </Text>
+  //         <Text>&middot;</Text>
+  //         <Text numberOfLines={1} style={styles.tweetHandle}>
+  //           {formatDistanceToNowStrict(new Date(tweet.created_at), {
+  //             addSuffix: true,
+  //             locale: {
+  //               ...locale,
+  //               formatDistance,
+  //             },
+  //           })}
+  //         </Text>
+  //       </TouchableOpacity>
+  //       <TouchableOpacity
+  //         style={styles.tweetContentContainer}
+  //         onPress={() => goToSingleTweet(tweet.id)}
+  //       >
+  //         <Text style={styles.tweetContent}>{tweet.body}</Text>
+  //       </TouchableOpacity>
+  //       <View style={styles.tweetEngagment}>
+  //         <TouchableOpacity style={[styles.flexRow]}>
+  //           <EvilIcons
+  //             name="comment"
+  //             size={22}
+  //             color="gray"
+  //             style={{ marginRight: 2 }}
+  //           />
+  //           <Text style={styles.textGray}>456</Text>
+  //         </TouchableOpacity>
+  //         <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
+  //           <EvilIcons
+  //             name="retweet"
+  //             size={22}
+  //             color="gray"
+  //             style={{ marginRight: 2 }}
+  //           />
+  //           <Text style={styles.textGray}>46</Text>
+  //         </TouchableOpacity>
+  //         <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
+  //           <EvilIcons
+  //             name="heart"
+  //             size={22}
+  //             color="gray"
+  //             style={{ marginRight: 2 }}
+  //           />
+  //           <Text style={styles.textGray}>1,234</Text>
+  //         </TouchableOpacity>
+  //         <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
+  //           <EvilIcons
+  //             name={Platform.OS === "ios" ? "share-apple" : "share-google"}
+  //             size={22}
+  //             color="gray"
+  //             style={{ marginRight: 2 }}
+  //           />
+  //         </TouchableOpacity>
+  //       </View>
+  //     </View>
+  //   </View>
+  // );
+  
   return (
     <View style={styles.container}>
       {isLoading ? (
@@ -184,7 +176,7 @@ export default function HomeScreen({ route, navigation }) {
         <FlatList
           ref={flatListRef}
           data={tweets}
-          renderItem={renderItem}
+          renderItem={props => <RenderTweet {...props} />}
           keyExtractor={(item) => item.id.toString()}
           ItemSeparatorComponent={() => (
             <View style={styles.tweetSeparator}></View>
