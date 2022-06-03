@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { AuthContext, AuthProvider } from "./context/AuthProvider";
 import LoginScreen from "./screens/Auth/LoginScreen";
 import RegisterScreen from "./screens/Auth/RegisterScreen";
+import * as SecureStore from 'expo-secure-store'
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -110,14 +111,22 @@ const TabNavigator = () => {
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
 
   useEffect(() => {
     // Check if the user is logged in
     // Check the SecureStore for the object/token
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
+    SecureStore.getItemAsync('user')
+      .then(userString => {
+        if (userString) {
+          setUser(JSON.parse(userString));
+        }
+        setIsLoading(false)
+      })
+      .catch(error => {
+        console.log(error)
+        setIsLoading(false)
+      })
   }, []);
 
   if (isLoading) {
