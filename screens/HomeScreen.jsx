@@ -1,22 +1,16 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import {
   View,
   FlatList,
-  Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
-  Platform,
   ActivityIndicator
 } from "react-native";
-import { EvilIcons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
-import { formatDistanceToNowStrict } from "date-fns";
-import formatDistance from "../helpers/formatDateDistance";
-import locale from "date-fns/locale/en-US";
 import axiosConfig from '../helpers/axiosConfig'
 
 import RenderTweet from "../components/RenderTweet";
+import { AuthContext } from "../context/AuthProvider";
 
 export default function HomeScreen({ route, navigation }) {
   const [tweets, setTweets] = useState([]);
@@ -25,6 +19,7 @@ export default function HomeScreen({ route, navigation }) {
   const [page, setPage] = useState(1);
   const [isAtEndOfScrolling, setIsAtEndOfScrolling] = useState(false);
   const flatListRef = useRef()
+  const { user } = useContext(AuthContext)
 
   useEffect(() => {
     getAllTweets();
@@ -43,6 +38,7 @@ export default function HomeScreen({ route, navigation }) {
     setPage(1)
     setIsAtEndOfScrolling(false)
     setIsRefreshing(false)
+    axiosConfig.defaults.headers.common['Authorization'] = `Bearer ${user.token}`
     axiosConfig
       .get(`/tweets`)
       .then(response => {
@@ -57,10 +53,10 @@ export default function HomeScreen({ route, navigation }) {
   }
 
   function getAllTweets() {
+    axiosConfig.defaults.headers.common['Authorization'] = `Bearer ${user.token}`
     axiosConfig
       .get(`/tweets?page=${page}`)
       .then(response => {
-        // console.log(response.data.data)
         if (page === 1) {
           setTweets(response.data.data);
         } else {
@@ -94,79 +90,6 @@ export default function HomeScreen({ route, navigation }) {
   function goToNewTweet() {
     navigation.navigate("New Tweet");
   }
-  // const renderItem = ({ item: tweet }) => (
-  //   <View style={styles.tweetContainer}>
-  //     <TouchableOpacity onPress={() => goToProfile(tweet.user.id)}>
-  //       <Image style={styles.avatar} source={{ uri: tweet.user.avatar }} />
-  //     </TouchableOpacity>
-  //     <View style={{ flex: 1 }}>
-  //       <TouchableOpacity
-  //         style={styles.flexRow}
-  //         onPress={() => goToSingleTweet(tweet.id)}
-  //       >
-  //         <Text numberOfLines={1} style={styles.tweetName}>
-  //           {tweet.user.name}
-  //         </Text>
-  //         <Text numberOfLines={1} style={styles.tweetHandle}>
-  //           @{tweet.user.username}
-  //         </Text>
-  //         <Text>&middot;</Text>
-  //         <Text numberOfLines={1} style={styles.tweetHandle}>
-  //           {formatDistanceToNowStrict(new Date(tweet.created_at), {
-  //             addSuffix: true,
-  //             locale: {
-  //               ...locale,
-  //               formatDistance,
-  //             },
-  //           })}
-  //         </Text>
-  //       </TouchableOpacity>
-  //       <TouchableOpacity
-  //         style={styles.tweetContentContainer}
-  //         onPress={() => goToSingleTweet(tweet.id)}
-  //       >
-  //         <Text style={styles.tweetContent}>{tweet.body}</Text>
-  //       </TouchableOpacity>
-  //       <View style={styles.tweetEngagment}>
-  //         <TouchableOpacity style={[styles.flexRow]}>
-  //           <EvilIcons
-  //             name="comment"
-  //             size={22}
-  //             color="gray"
-  //             style={{ marginRight: 2 }}
-  //           />
-  //           <Text style={styles.textGray}>456</Text>
-  //         </TouchableOpacity>
-  //         <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
-  //           <EvilIcons
-  //             name="retweet"
-  //             size={22}
-  //             color="gray"
-  //             style={{ marginRight: 2 }}
-  //           />
-  //           <Text style={styles.textGray}>46</Text>
-  //         </TouchableOpacity>
-  //         <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
-  //           <EvilIcons
-  //             name="heart"
-  //             size={22}
-  //             color="gray"
-  //             style={{ marginRight: 2 }}
-  //           />
-  //           <Text style={styles.textGray}>1,234</Text>
-  //         </TouchableOpacity>
-  //         <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
-  //           <EvilIcons
-  //             name={Platform.OS === "ios" ? "share-apple" : "share-google"}
-  //             size={22}
-  //             color="gray"
-  //             style={{ marginRight: 2 }}
-  //           />
-  //         </TouchableOpacity>
-  //       </View>
-  //     </View>
-  //   </View>
-  // );
   
   return (
     <View style={styles.container}>
