@@ -37,7 +37,7 @@ export default function SearchScreen({ route, navigation }) {
     setIsAtEndOfScrolling(false)
     setIsRefreshing(false)
     axiosConfig
-      .get(`/tweets`)
+      .get(`/tweets_all`)
       .then(response => {
         setTweets(response.data.data);
         setIsLoading(false);
@@ -51,7 +51,7 @@ export default function SearchScreen({ route, navigation }) {
 
   function getAllTweets() {
     axiosConfig
-      .get(`/tweets?page=${page}`)
+      .get(`/tweets_all?page=${page}`)
       .then(response => {
         if (page === 1) {
           setTweets(response.data.data);

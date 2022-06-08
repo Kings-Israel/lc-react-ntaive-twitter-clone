@@ -37,6 +37,7 @@ export const AuthProvider = ({ children }) => {
               setIsLoading(false);
             })
             .catch((error) => {
+              console.log(error.response)
               const key = Object.keys(error.response.data.errors)[0];
               setError(error.response.data.errors[key][0]); 
               setIsLoading(false);

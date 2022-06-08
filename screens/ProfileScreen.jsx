@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -7,67 +7,77 @@ import {
   Image,
   FlatList,
   Linking,
-  ActivityIndicator
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { EvilIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import axiosConfig from "../helpers/axiosConfig";
 import RenderTweet from "../components/RenderTweet";
+import { AuthContext } from "../context/AuthProvider";
 
 export default function ProfileScreen({ route, navigation }) {
   const [user, setUser] = useState(null);
   const [tweets, setTweets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [isAtEndOfScrolling, setIsAtEndOfScrolling] = useState(false);
-  const DATA = [
-    {
-      id: "1",
-      title: "First Item",
-    },
-    {
-      id: "2",
-      title: "Second Item",
-    },
-    {
-      id: "3",
-      title: "Third Item",
-    },
-    {
-      id: "4",
-      title: "Fourth Item",
-    },
-    {
-      id: "5",
-      title: "Fifth Item",
-    },
-    {
-      id: "6",
-      title: "Sixth Item",
-    },
-    {
-      id: "7",
-      title: "Seventh Item",
-    },
-    {
-      id: "8",
-      title: "Eigth Item",
-    },
-    {
-      id: "9",
-      title: "Ninth Item",
-    },
-    {
-      id: "10",
-      title: "Tenth Item",
-    },
-  ];
+  const [isFollowing, setIsFollowing] = useState(false);
+  const { user: userFromContext } = useContext(AuthContext);
 
   useEffect(() => {
     getUser(route.params.userId);
-    getUserTweets(route.params.userId)
+    getUserTweets(route.params.userId);
   }, [page]);
+
+  useEffect(() => {
+    getIsFollowing();
+  }, []);
+
+  function getIsFollowing() {
+    axiosConfig.defaults.headers.common[
+      "Authorization"
+    ] = `Bearer ${userFromContext.token}`;
+    axiosConfig
+      .get(`/is_following/${route.params.userId}`)
+      .then((response) => {
+        setIsFollowing(response.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+
+  function follow(user) {
+    axiosConfig.defaults.headers.common[
+      "Authorization"
+    ] = `Bearer ${userFromContext.token}`;
+    axiosConfig
+      .post(`/follow/${user}`)
+      .then((response) => {
+        setIsFollowing(true);
+        Alert.alert("User Followed");
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+
+  function unfollow(user) {
+    axiosConfig.defaults.headers.common[
+      "Authorization"
+    ] = `Bearer ${userFromContext.token}`;
+    axiosConfig
+      .post(`/unfollow/${user}`)
+      .then((response) => {
+        Alert.alert("User Unfollowed");
+        setIsFollowing(false);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
 
   function getUser(user) {
     axiosConfig
@@ -84,7 +94,7 @@ export default function ProfileScreen({ route, navigation }) {
   function getUserTweets(user) {
     axiosConfig
       .get(`/user/${user}/tweets/?page=${page}`)
-      .then(response => {
+      .then((response) => {
         // console.log(response.data.data)
         if (page === 1) {
           setTweets(response.data.data);
@@ -95,33 +105,26 @@ export default function ProfileScreen({ route, navigation }) {
         if (!response.data.next_page_url) {
           setIsAtEndOfScrolling(true);
         }
-        
+
         setIsLoading(false);
         setIsRefreshing(false);
       })
       .catch((error) => {
-        console.log(error)
         setIsLoading(false);
-        setIsRefreshing(false)
+        setIsRefreshing(false);
       });
   }
 
   function handleRefresh() {
-    setPage(1)
-    setIsAtEndOfScrolling(false)
+    setPage(1);
+    setIsAtEndOfScrolling(false);
     setIsRefreshing(true);
     getUserTweets();
   }
 
   function handleEnd() {
-    setPage(page + 1)
+    setPage(page + 1);
   }
-
-  // const renderItem = ({ item }) => (
-  //   <View style={{ marginVertical: 20 }}>
-  //     <Text>{item.title}</Text>
-  //   </View>
-  // );
 
   const ProfileHeader = () => (
     <View style={styles.container}>
@@ -135,13 +138,29 @@ export default function ProfileScreen({ route, navigation }) {
               uri: "https://images.unsplash.com/photo-1557683316-973673baf926?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufBD8fHx86&auto=format&fit=crop&w=1080&q=80",
             }}
           />
+
           <View style={styles.avatarContainer}>
             <Image style={styles.avatar} source={{ uri: user.avatar }} />
-            <TouchableOpacity style={styles.followButton}>
-              <Text style={styles.followButtonText}>Follow</Text>
-            </TouchableOpacity>
+            {userFromContext.id != route.params.userId && (
+              <View>
+                {isFollowing ? (
+                  <TouchableOpacity
+                    style={styles.followButton}
+                    onPress={() => unfollow(user.id)}
+                  >
+                    <Text style={styles.followButtonText}>Unfollow</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.followButton}
+                    onPress={() => follow(user.id)}
+                  >
+                    <Text style={styles.followButtonText}>Follow</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
           </View>
-
           <View style={styles.nameContainer}>
             <Text style={styles.profileName}>{user.name}</Text>
             <Text style={styles.profileHandle}>@{user.username}</Text>
@@ -193,7 +212,7 @@ export default function ProfileScreen({ route, navigation }) {
     <FlatList
       style={styles.container}
       data={tweets}
-      renderItem={props => <RenderTweet {...props} />}
+      renderItem={(props) => <RenderTweet {...props} />}
       keyExtractor={(item) => item.id.toString()}
       ItemSeparatorComponent={() => <View style={styles.separator}></View>}
       ListHeaderComponent={ProfileHeader}
@@ -201,9 +220,9 @@ export default function ProfileScreen({ route, navigation }) {
       onRefresh={handleRefresh}
       onEndReached={handleEnd}
       onEndReachedThreshold={0}
-      ListFooterComponent={() => !isAtEndOfScrolling && (
-        <ActivityIndicator size="large" color="gray" />
-      )}
+      ListFooterComponent={() =>
+        !isAtEndOfScrolling && <ActivityIndicator size="large" color="gray" />
+      }
       scrollIndicatorInsets={{ right: 1 }}
     />
   );
